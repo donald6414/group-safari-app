@@ -11,10 +11,10 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { adminDashboard, agentDashboard, adminTours, agentTours } from '@/routes';
+import { adminDashboard, agentDashboard, adminTours, agentTours, adminAgentsList } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import { computed } from 'vue';
 
@@ -37,6 +37,11 @@ if (role.value === 'admin') {
             title: 'Tours',
             href: adminTours(),
             icon: LayoutGrid,
+        },
+        {
+            title: 'Agents',
+            href: adminAgentsList(),
+            icon: Users,
         },
     ];
 }else{
