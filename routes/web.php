@@ -21,6 +21,8 @@ Route::get('admin/dashboard', [App\Http\Controllers\admin\DashboardController::c
 Route::get('admin/tours', [App\Http\Controllers\admin\ToursController::class, 'index'])->middleware(['auth', 'verified', 'admin'])->name('adminTours');
 Route::post('admin/tour/create', [App\Http\Controllers\admin\ToursController::class, 'create'])->middleware(['auth', 'verified', 'admin'])->name('adminTourCreate');
 Route::get('admin/tour/show/{id}', [App\Http\Controllers\admin\ToursController::class, 'show'])->middleware(['auth', 'verified', 'admin'])->name('adminTourShow');
+Route::get('admin/agents/list', [App\Http\Controllers\admin\AgentController::class, 'index'])->middleware(['auth', 'verified', 'admin'])->name('adminAgentsList');
+Route::post('admin/agent/create', [App\Http\Controllers\admin\AgentController::class, 'create'])->middleware(['auth', 'verified', 'admin'])->name('adminAgentCreate');
 
 // Agent
 Route::get('agent/dashboard', [App\Http\Controllers\agent\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'agent'])->name('agentDashboard');
