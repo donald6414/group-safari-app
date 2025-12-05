@@ -52,4 +52,14 @@ class User extends Authenticatable implements MustVerifyEmail
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+
+    public function clients()
+    {
+        return $this->hasMany(Client::class, 'userId', 'id');
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'userId', 'id');
+    }
 }

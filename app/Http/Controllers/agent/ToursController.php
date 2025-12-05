@@ -10,6 +10,14 @@ use App\Models\Client;
 use App\Models\Booking;
 use App\Models\TourVehicleSeat;
 use App\Helper\FileUploadHelper;
+use App\Mail\ReservationRequest;
+use App\Mail\ReservationRequestConfirmation;
+use App\Mail\PaymentReceipt;
+use App\Mail\PaymentReceiptConfirmation;
+use App\Mail\BookingConfirmed;
+use App\Mail\BookingConfirmedNotification;
+use Illuminate\Support\Facades\Mail;
+use App\Models\User;
 
 class ToursController extends Controller
 {
@@ -84,6 +92,7 @@ class ToursController extends Controller
         ]);
 
         $booking = Booking::create([
+            'userId' => auth()->user()->id,
             'clientId' => $client->id,
             'tourVehicleSeatId' => $request->seatId,
             'startDate' => $request->startDate,
@@ -93,6 +102,30 @@ class ToursController extends Controller
         $vehicleSeat = TourVehicleSeat::findOrFail($request->seatId);
         $vehicleSeat->status = 'reserved';
         $vehicleSeat->save();
+
+        // Work on sending reservation request to admins
+        $admins = User::where('role', 'admin')->get();
+        $tourPackage = Tour::findOrFail($request->tourId);
+        $adminData = [
+            'packageTitle' => $tourPackage->title,
+            'seatNumber' => $vehicleSeat->seatNumber,
+            'clientName' => $client->name,
+            'agentName' => auth()->user()->name,
+        ];
+        foreach ($admins as $admin) {
+            $adminData['adminName'] = $admin->name;
+            Mail::to($admin->email)->send(new ReservationRequest($adminData));
+        }
+
+        // Notify agent about the reservation request
+        $agentData = [
+            'packageTitle' => $tourPackage->title,
+            'seatNumber' => $vehicleSeat->seatNumber,
+            'clientName' => $client->name,
+            'agentName' => auth()->user()->name,
+        ];
+
+        Mail::to(auth()->user()->email)->send(new ReservationRequestConfirmation($agentData));
 
         return Inertia::location(route('agentTours'));
     }
@@ -116,6 +149,28 @@ class ToursController extends Controller
             $booking->paymentReceipt = FileUploadHelper::uploadAndSaveFile($request->file('paymentReceipt'), 'uploads', 'payment-receipts');
             $booking->save();
         }
+
+        // Work on sending payment receipt to admins
+        $admins = User::where('role', 'admin')->get();
+        $adminData = [
+            'packageTitle' => $booking->tourVehicleSeat->tourVehicle->tour->title,
+            'seatNumber' => $booking->tourVehicleSeat->seatNumber,
+            'clientName' => $booking->client->name,
+            'agentName' => auth()->user()->name,
+        ];
+        foreach ($admins as $admin) {
+            $adminData['adminName'] = $admin->name;
+            Mail::to($admin->email)->send(new PaymentReceipt($adminData));
+        }
+
+        // Work on agent notification about the payment receipt
+        $agentData = [
+            'packageTitle' => $booking->tourVehicleSeat->tourVehicle->tour->title,
+            'seatNumber' => $booking->tourVehicleSeat->seatNumber,
+            'clientName' => $booking->client->name,
+            'agentName' => auth()->user()->name,
+        ];
+        Mail::to(auth()->user()->email)->send(new PaymentReceiptConfirmation($agentData));
 
         return back()->with('success', 'Payment receipt uploaded successfully.');
     }
@@ -157,6 +212,28 @@ class ToursController extends Controller
         // Update seat status to booked
         $seat->status = 'booked';
         $seat->save();
+
+        // Work on notifying admins upon paayment confimation and seat booking
+        $admins = User::where('role', 'admin')->get();
+        $adminData = [
+            'packageTitle' => $booking->tourVehicleSeat->tourVehicle->tour->title,
+            'seatNumber' => $booking->tourVehicleSeat->seatNumber,
+            'clientName' => $booking->client->name,
+            'agentName' => $booking->client->user->name,
+        ];
+        foreach ($admins as $admin) {
+            $adminData['adminName'] = $admin->name;
+            Mail::to($admin->email)->send(new PaymentReceipt($adminData));
+        }
+
+        // Notify argent that the booking was confirmed
+        $agentData = [
+            'packageTitle' => $booking->tourVehicleSeat->tourVehicle->tour->title,
+            'seatNumber' => $booking->tourVehicleSeat->seatNumber,
+            'clientName' => $booking->client->name,
+            'agentName' => $booking->client->user->name,
+        ];
+        Mail::to($booking->client->user->email)->send(new BookingConfirmed($agentData));
 
         return back()->with('success', 'Booking confirmed successfully.');
     }

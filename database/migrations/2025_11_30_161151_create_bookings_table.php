@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('userId');
+            $table->foreign('userId')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('clientId');
             $table->foreign('clientId')->references('id')->on('clients')->onDelete('cascade');
             $table->unsignedBigInteger('tourVehicleSeatId');
