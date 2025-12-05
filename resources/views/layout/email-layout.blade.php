@@ -303,7 +303,7 @@
                         @yield('footer')
                         
                         <p class="footer-text">
-                            &copy; {{ date('Y') }} {{ config('app.name', 'Group Safari') }}. All rights reserved.
+                            &copy; {{ date('Y') }} {{ config('app.name', 'Africa Travel Bureau') }}. All rights reserved.
                         </p>
                     </div>
                 </td>
