@@ -20,11 +20,11 @@ class Client extends Model
 
     public function bookings()
     {
-        return $this->hasMany(Booking::class, 'clientId');
+        return $this->hasMany(Booking::class, 'clientId', 'id');
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'userId');
+        return $this->belongsTo(User::class, 'userId', 'id');
     }
 }

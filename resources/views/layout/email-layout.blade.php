@@ -60,10 +60,17 @@
         .logo {
             font-size: 28px;
             font-weight: 700;
-            color: #ea580c;
+            color: #1e3a0f;
             text-decoration: none;
             display: inline-block;
             margin-bottom: 10px;
+        }
+        
+        .logo-img {
+            max-width: 200px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
         }
         
         .email-content-container {
@@ -78,6 +85,7 @@
         .email-content {
             padding: 40px;
             background-color: #ffffff;
+            text-align: left;
         }
         
         .greeting {
@@ -85,6 +93,7 @@
             font-weight: 600;
             color: #1a1a1a;
             margin: 0 0 10px 0;
+            text-align: left;
         }
         
         .subtitle {
@@ -92,10 +101,12 @@
             color: #666666;
             margin: 0 0 30px 0;
             line-height: 1.5;
+            text-align: left;
         }
         
         .content-section {
             margin: 30px 0;
+            text-align: left;
         }
         
         .section-title {
@@ -103,6 +114,7 @@
             font-weight: 600;
             color: #1a1a1a;
             margin: 0 0 15px 0;
+            text-align: left;
         }
         
         .section-text {
@@ -110,10 +122,11 @@
             color: #666666;
             margin: 0 0 20px 0;
             line-height: 1.6;
+            text-align: left;
         }
         
         .icon-container {
-            text-align: center;
+            text-align: left;
             margin: 30px 0;
         }
         
@@ -122,18 +135,18 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background-color: #22c55e;
-            margin: 0 auto 20px;
+            background-color: #1e3a0f;
+            margin: 0 0 20px 0;
             text-align: center;
             line-height: 80px;
         }
         
         .icon-circle.orange {
-            background-color: #ea580c;
+            background-color: #6b4423;
         }
         
         .icon-circle.brown {
-            background-color: #92400e;
+            background-color: #6b4423;
         }
         
         .icon {
@@ -145,14 +158,14 @@
         }
         
         .button-container {
-            text-align: center;
+            text-align: left;
             margin: 30px 0;
         }
         
         .button {
             display: inline-block;
             padding: 14px 32px;
-            background-color: #22c55e;
+            background-color: #1e3a0f;
             color: #ffffff !important;
             text-decoration: none;
             border-radius: 8px;
@@ -164,7 +177,11 @@
         }
         
         .button:hover {
-            background-color: #16a34a;
+            background-color: #2d5016;
+        }
+        
+        .button[style*="background-color: #6b4423"]:hover {
+            background-color: #8b5a3c;
         }
         
         code {
@@ -179,10 +196,11 @@
         
         .info-box {
             background-color: #f9fafb;
-            border-left: 4px solid #22c55e;
+            border-left: 4px solid #1e3a0f;
             padding: 20px;
             margin: 20px 0;
             border-radius: 4px;
+            text-align: left;
         }
         
         .info-text {
@@ -190,17 +208,18 @@
             color: #666666;
             margin: 5px 0;
             line-height: 1.5;
+            text-align: left;
         }
         
         .footer {
             padding: 30px 20px;
-            text-align: center;
+            text-align: left;
             max-width: 600px;
             margin: 0 auto;
         }
         
         .footer-link {
-            color: #ea580c;
+            color: #6b4423;
             text-decoration: none;
             font-size: 14px;
         }
@@ -214,6 +233,7 @@
             color: #666666;
             margin: 10px 0;
             line-height: 1.6;
+            text-align: left;
         }
         
         /* Responsive styles */
@@ -257,8 +277,17 @@
                 <td align="center" style="padding: 0;">
                     <!-- Header -->
                     <div class="email-header">
-                        <a href="{{ config('app.url') }}" class="logo">
-                            {{ config('app.name', 'Group Safari') }}
+                        <a href="{{ config('app.url') }}" style="display: inline-block; text-decoration: none;">
+                            @php
+                                $logoPath = public_path('africa-travel-bureau.png');
+                                $logoUrl = asset('africa-travel-bureau.png');
+                                $logoExists = file_exists($logoPath);
+                            @endphp
+                            @if($logoExists)
+                                <img src="{{ $logoUrl }}" alt="{{ config('app.name', 'Africa Travel Bureau') }}" class="logo-img" style="max-width: 200px; height: auto; display: block; margin: 0 auto;" />
+                            @else
+                                <span class="logo">{{ config('app.name', 'Africa Travel Bureau') }}</span>
+                            @endif
                         </a>
                     </div>
                     

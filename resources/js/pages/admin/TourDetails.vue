@@ -103,7 +103,7 @@ const drawerSeat = computed(() => selectedSeat.value);
                 <h1 class="text-4xl font-bold text-foreground">{{ props.responseData.tour.title }}</h1>
                 <p class="text-sm text-muted-foreground mt-1">Tour Package</p>
             </div>
-
+            
             <!-- Tour Information Card -->
             <div class="rounded-xl border bg-card p-6 shadow-sm">
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-3">

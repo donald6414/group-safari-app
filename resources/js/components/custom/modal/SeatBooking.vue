@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon } from 'lucide-vue-next';
+import { useToast } from '@/components/ui/toast';
 
 // This component is for ADDING/NEW bookings only - not for updating existing bookings
 const props = defineProps<{
@@ -81,6 +82,9 @@ const errors = ref<Record<string, string>>({});
 
 // Processing state
 const processing = ref<boolean>(false);
+
+// Toast notifications
+const { success } = useToast();
 
 // Computed properties for individual error fields (ensures safe access)
 const fullNameError = computed(() => errors.value?.fullName || '');
@@ -396,6 +400,8 @@ const handleConfirm = () => {
     router.post('/agent/book-seat', formData, {
         preserveScroll: true,
         onSuccess: () => {
+            // Show success toast message
+            success('Booking Successful', 'Seat has been reserved successfully. Please upload payment receipt to confirm your booking.');
             // Close modal and reset form on success
             handleClose();
             // Emit confirm event for parent component if needed
