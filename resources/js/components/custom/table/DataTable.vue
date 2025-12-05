@@ -231,11 +231,14 @@ const RenderCell = defineComponent({
         }
     },
     setup(props: { render: () => any }) {
-        const result = props.render();
-        if (result && typeof result === 'object' && 'type' in result) {
-            return () => result;
-        }
-        return () => String(result ?? '');
+        // Call render function in the render function to ensure reactivity
+        return () => {
+            const result = props.render();
+            if (result && typeof result === 'object' && 'type' in result) {
+                return result;
+            }
+            return String(result ?? '');
+        };
     }
 });
 </script>

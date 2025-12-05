@@ -50,20 +50,11 @@
             padding: 40px 20px;
         }
         
-        .email-container {
+        .email-header {
+            padding: 30px 20px 20px;
+            text-align: center;
             max-width: 600px;
             margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        .email-header {
-            background-color: #ffffff;
-            padding: 30px 40px 20px;
-            text-align: center;
-            border-bottom: 1px solid #f0f0f0;
         }
         
         .logo {
@@ -73,6 +64,15 @@
             text-decoration: none;
             display: inline-block;
             margin-bottom: 10px;
+        }
+        
+        .email-content-container {
+            max-width: 600px;
+            margin: 0 auto 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
         }
         
         .email-content {
@@ -193,10 +193,10 @@
         }
         
         .footer {
-            background-color: #f9fafb;
-            padding: 30px 40px;
+            padding: 30px 20px;
             text-align: center;
-            border-top: 1px solid #f0f0f0;
+            max-width: 600px;
+            margin: 0 auto;
         }
         
         .footer-link {
@@ -227,7 +227,11 @@
             }
             
             .email-header {
-                padding: 20px 20px 15px;
+                padding: 20px 10px 15px;
+            }
+            
+            .email-content-container {
+                margin-bottom: 20px;
             }
             
             .greeting {
@@ -241,7 +245,7 @@
             }
             
             .footer {
-                padding: 20px;
+                padding: 20px 10px;
             }
         }
     </style>
@@ -251,27 +255,27 @@
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
             <tr>
                 <td align="center" style="padding: 0;">
-                    <div class="email-container">
-                        <!-- Header -->
-                        <div class="email-header">
-                            <a href="{{ config('app.url') }}" class="logo">
-                                {{ config('app.name', 'Group Safari') }}
-                            </a>
-                        </div>
-                        
-                        <!-- Content -->
+                    <!-- Header -->
+                    <div class="email-header">
+                        <a href="{{ config('app.url') }}" class="logo">
+                            {{ config('app.name', 'Group Safari') }}
+                        </a>
+                    </div>
+                    
+                    <!-- Content Container -->
+                    <div class="email-content-container">
                         <div class="email-content">
                             @yield('content')
                         </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="footer">
+                        @yield('footer')
                         
-                        <!-- Footer -->
-                        <div class="footer">
-                            @yield('footer')
-                            
-                            <p class="footer-text">
-                                &copy; {{ date('Y') }} {{ config('app.name', 'Group Safari') }}. All rights reserved.
-                            </p>
-                        </div>
+                        <p class="footer-text">
+                            &copy; {{ date('Y') }} {{ config('app.name', 'Group Safari') }}. All rights reserved.
+                        </p>
                     </div>
                 </td>
             </tr>
