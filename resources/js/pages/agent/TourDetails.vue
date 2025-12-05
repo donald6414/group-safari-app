@@ -8,6 +8,7 @@ import { Tour, TourVehicle, TourVehicleSeat, Booking } from '@/types/tour';
 import SeatBooking from '@/components/custom/modal/SeatBooking.vue';
 import UploadPaymentReceipt from '@/components/custom/modal/UploadPaymentReceipt.vue';
 import { Button } from '@/components/ui/button';
+import { Toaster } from '@/components/ui/toast';
 import { Plus } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -307,6 +308,9 @@ const showPaymentReceiptModal = computed(() => !!selectedSeat.value && !!selecte
                 :seat="unref(modalSeat)!"
                 :booking="unref(modalBooking)!"
                 @update:open="handlePaymentReceiptModalClose" />
+            
+            <!-- Toast Notifications -->
+            <Toaster />
         </div>
     </AppLayout>
 </template>

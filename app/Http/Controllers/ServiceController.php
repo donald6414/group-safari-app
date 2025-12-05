@@ -47,9 +47,4 @@ class ServiceController extends Controller
         // Example: "118 TKH" (January 18, Tanzania + Kenya)
         return $datePrefix . ' ' . $highlightLetters . 'H';
     }
-
-    public function uploadPaymentReceipt(Request $request)
-    {
-        dd($request->all());
-    }
 }

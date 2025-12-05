@@ -8,6 +8,7 @@ import StartCard from '@/components/custom/StartCard.vue';
 import { type Stat } from '@/types/stat';
 import { type Tour, TourVehicleSeat, TourVehicle } from '@/types/tour';
 import SeatBookingDrawer from '@/components/custom/drawer/SeatBooking.vue';
+import { Toaster } from '@/components/ui/toast';
 
 const props = defineProps<{
     id: number | string;
@@ -194,6 +195,9 @@ const drawerSeat = computed(() => selectedSeat.value);
                 :seat="unref(drawerSeat)"
                 @update:open="handleDrawerClose"
             />
+            
+            <!-- Toast Notifications -->
+            <Toaster />
         </div>
     </AppLayout>
 </template>

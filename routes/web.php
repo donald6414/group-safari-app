@@ -10,10 +10,15 @@ use Laravel\Fortify\Features;
 //     ]);
 // })->name('home');
 Route::get('/', function () {
-    if (auth()->user()->role === 'admin') {
-        return redirect()->route('adminDashboard');
-    } else {
-        return redirect()->route('agentDashboard');
+
+    if (!auth()->user()) {
+        return redirect()->route('login');
+    }else{
+        if (auth()->user()->role === 'admin') {
+            return redirect()->route('adminDashboard');
+        } else {
+            return redirect()->route('agentDashboard');
+        }
     }
 })->name('home');
 
@@ -36,6 +41,7 @@ Route::post('admin/agent/activate/{id}', [App\Http\Controllers\admin\AgentContro
 Route::post('admin/agent/suspend/{id}', [App\Http\Controllers\admin\AgentController::class, 'suspend'])->middleware(['auth', 'verified', 'admin'])->name('adminAgentSuspend');
 Route::post('admin/agent/suspend/{id}', [App\Http\Controllers\admin\AgentController::class, 'suspend'])->middleware(['auth', 'verified', 'admin'])->name('adminAgentSuspend');
 Route::post('admin/agent/activate/{id}', [App\Http\Controllers\admin\AgentController::class, 'activate'])->middleware(['auth', 'verified', 'admin'])->name('adminAgentActivate');
+Route::post('agent/confirm-booking', [App\Http\Controllers\agent\ToursController::class, 'confirmBooking'])->middleware(['auth', 'verified', 'admin'])->name('agentConfirmBooking');
 
 // Agent
 Route::get('agent/dashboard', [App\Http\Controllers\agent\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'agent'])->name('agentDashboard');
