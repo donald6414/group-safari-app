@@ -8,7 +8,7 @@
     <p class="subtitle">A payment receipt has been uploaded for a reservation and requires your verification.</p>
     
     <!-- Payment Receipt Details Section -->
-    <div class="info-box" style="border-left-color: #3b82f6;">
+    <div class="info-box" style="border-left-color: #6b4423;">
         <p class="info-text" style="font-weight: 600; color: #1a1a1a; margin-bottom: 15px; font-size: 16px;">Booking Details:</p>
         <p class="info-text"><strong>Tour Package:</strong> {{ $data['packageTitle'] ?? 'N/A' }}</p>
         <p class="info-text"><strong>Seat Number:</strong> {{ $data['seatNumber'] ?? 'N/A' }}</p>
@@ -28,7 +28,7 @@
     
     <!-- Action Button -->
     <div class="button-container">
-        <a href="{{ config('app.url') }}/admin/tours" class="button" style="background-color: #3b82f6; color: #ffffff !important;">
+        <a href="{{ config('app.url') }}/admin/tours" class="button" style="background-color: #6b4423;">
             Review & Confirm Booking
         </a>
     </div>

@@ -8,7 +8,7 @@
     <p class="subtitle">A new seat reservation request has been submitted by an agent and requires your attention.</p>
     
     <!-- Reservation Details Section -->
-    <div class="info-box" style="border-left-color: #ea580c;">
+    <div class="info-box" style="border-left-color: #6b4423;">
         <p class="info-text" style="font-weight: 600; color: #1a1a1a; margin-bottom: 15px; font-size: 16px;">Reservation Request Details:</p>
         <p class="info-text"><strong>Tour Package:</strong> {{ $data['packageTitle'] ?? 'N/A' }}</p>
         <p class="info-text"><strong>Seat Number:</strong> {{ $data['seatNumber'] ?? 'N/A' }}</p>
@@ -18,7 +18,7 @@
     
     <!-- Action Button -->
     <div class="button-container">
-        <a href="{{ config('app.url') }}/admin/tours" class="button" style="background-color: #ea580c; color: #ffffff !important;">
+        <a href="{{ config('app.url') }}/admin/tours" class="button" style="background-color: #6b4423;">
             View Tour Details
         </a>
     </div>

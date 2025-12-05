@@ -127,7 +127,7 @@ class ToursController extends Controller
 
         Mail::to(auth()->user()->email)->send(new ReservationRequestConfirmation($agentData));
 
-        return Inertia::location(route('agentTours'));
+        return redirect()->back()->with('success', 'Reservation request sent successfully. Please upload payment receipt to confirm your booking.');
     }
 
     public function uploadPaymentReceipt(Request $request)
@@ -223,7 +223,7 @@ class ToursController extends Controller
         ];
         foreach ($admins as $admin) {
             $adminData['adminName'] = $admin->name;
-            Mail::to($admin->email)->send(new PaymentReceipt($adminData));
+            Mail::to($admin->email)->send(new BookingConfirmedNotification($adminData));
         }
 
         // Notify argent that the booking was confirmed

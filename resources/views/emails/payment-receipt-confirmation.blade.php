@@ -8,7 +8,7 @@
     <p class="subtitle">We have successfully received your payment receipt and our team is currently reviewing it.</p>
     
     <!-- Booking Details Section -->
-    <div class="info-box" style="border-left-color: #22c55e;">
+    <div class="info-box">
         <p class="info-text" style="font-weight: 600; color: #1a1a1a; margin-bottom: 15px; font-size: 16px;">Booking Details:</p>
         <p class="info-text"><strong>Tour Package:</strong> {{ $data['packageTitle'] ?? 'N/A' }}</p>
         <p class="info-text"><strong>Seat Number:</strong> {{ $data['seatNumber'] ?? 'N/A' }}</p>
@@ -23,7 +23,7 @@
     </div>
     
     <!-- What Happens Next Section -->
-    <div class="info-box" style="background-color: #f0f9ff; border-left-color: #3b82f6; border-left-width: 4px; padding: 20px; margin: 20px 0; border-radius: 4px;">
+    <div class="info-box" style="background-color: #f9fafb; border-left-color: #6b4423; border-left-width: 4px; padding: 20px; margin: 20px 0; border-radius: 4px;">
         <p class="info-text" style="font-weight: 600; color: #1a1a1a; margin-bottom: 15px; font-size: 16px;">What Happens Next?</p>
         <div style="space-y: 10px;">
             <p class="info-text" style="margin: 10px 0; line-height: 1.6;">

@@ -8,7 +8,7 @@
     <p class="subtitle">Your seat reservation request has been received and is being processed.</p>
     
     <!-- Reservation Details Section -->
-    <div class="info-box" style="border-left-color: #22c55e;">
+    <div class="info-box">
         <p class="info-text" style="font-weight: 600; color: #1a1a1a; margin-bottom: 15px; font-size: 16px;">Reservation Request Details:</p>
         <p class="info-text"><strong>Tour Package:</strong> {{ $data['packageTitle'] ?? 'N/A' }}</p>
         <p class="info-text"><strong>Seat Number:</strong> {{ $data['seatNumber'] ?? 'N/A' }}</p>

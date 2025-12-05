@@ -12,7 +12,7 @@
         <p class="info-text" style="font-weight: 600; color: #1a1a1a; margin-bottom: 15px;">Your Login Credentials:</p>
         <p class="info-text"><strong>Email:</strong> {{ $data['email'] ?? 'Your registered email' }}</p>
         <p class="info-text"><strong>Temporary Password:</strong> <code>{{ $data['password'] }}</code></p>
-        <p class="info-text" style="margin-top: 15px; font-size: 13px; color: #dc2626;">
+        <p class="info-text" style="margin-top: 15px; font-size: 13px; color: #6b4423;">
             <strong>Important:</strong> Please change your password after your first login.
         </p>
     </div>

@@ -13,12 +13,14 @@ class BookingConfirmedNotification extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
+    public array $data;
+
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct(array $adminData)
     {
-        //
+        $this->data = $adminData;
     }
 
     /**
@@ -27,7 +29,7 @@ class BookingConfirmedNotification extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Booking Confirmed Notification',
+            subject: 'Booking Confirmed - Payment Received',
         );
     }
 
@@ -37,7 +39,7 @@ class BookingConfirmedNotification extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails/booking-confirmed-notification',
+            view: 'emails.booking-confirmed-notification',
         );
     }
 
