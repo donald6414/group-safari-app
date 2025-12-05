@@ -20,6 +20,7 @@ export interface Booking {
     startDate: string | null;
     endDate: string | null;
     status: string | 'active' | 'inactive';
+    paymentReceipt?: string | null;
     created_at: string;
     updated_at: string;
     client?: Client;

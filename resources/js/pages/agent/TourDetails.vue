@@ -3,9 +3,10 @@ import { ref, computed, unref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { agentTourDetails } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
-import { Tour, TourVehicle, TourVehicleSeat } from '@/types/tour';
+import { Head, usePage } from '@inertiajs/vue3';
+import { Tour, TourVehicle, TourVehicleSeat, Booking } from '@/types/tour';
 import SeatBooking from '@/components/custom/modal/SeatBooking.vue';
+import UploadPaymentReceipt from '@/components/custom/modal/UploadPaymentReceipt.vue';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-vue-next';
 
@@ -30,10 +31,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+// Get current user
+const page = usePage();
+const currentUser = computed(() => {
+    const auth = page.props.auth as { user?: { id: number } } | undefined;
+    return auth?.user;
+});
+
 // Modal state
 const isBookingModalOpen = ref(false);
+const isPaymentReceiptModalOpen = ref(false);
 const selectedSeat = ref<TourVehicleSeat | null>(null);
 const selectedVehicle = ref<TourVehicle | null>(null);
+const selectedBooking = ref<Booking | null>(null);
 
 // Format date for display
 const formatDate = (dateString: string | null) => {
@@ -45,13 +55,56 @@ const formatDate = (dateString: string | null) => {
     });
 };
 
-// Handle seat click - opens modal for NEW booking only (not for updating)
+// Check if the current agent owns the reservation
+const isReservedByCurrentAgent = (seat: TourVehicleSeat): boolean => {
+    const user = currentUser.value;
+    if (!user || seat.status !== 'reserved') {
+        return false;
+    }
+    
+    // Check if any booking for this seat belongs to the current agent
+    if (seat.bookings && seat.bookings.length > 0) {
+        return seat.bookings.some(booking => {
+            // Check if the booking's client belongs to the current agent
+            return booking.client?.userId === user.id;
+        });
+    }
+    
+    return false;
+};
+
+// Get the booking for the current agent's reservation
+const getCurrentAgentBooking = (seat: TourVehicleSeat): Booking | null => {
+    const user = currentUser.value;
+    if (!user || seat.status !== 'reserved') {
+        return null;
+    }
+    
+    if (seat.bookings && seat.bookings.length > 0) {
+        return seat.bookings.find(booking => {
+            return booking.client?.userId === user.id;
+        }) || null;
+    }
+    
+    return null;
+};
+
+// Handle seat click - opens modal for NEW booking or payment receipt upload
 const handleSeatClick = (seat: TourVehicleSeat, vehicle: TourVehicle) => {
     if (seat.status === 'available') {
         // Set selected seat and vehicle for new booking
         selectedSeat.value = seat;
         selectedVehicle.value = vehicle;
         isBookingModalOpen.value = true;
+    } else if (seat.status === 'reserved' && isReservedByCurrentAgent(seat)) {
+        // If reserved by current agent, open payment receipt upload modal
+        const booking = getCurrentAgentBooking(seat);
+        if (booking) {
+            selectedSeat.value = seat;
+            selectedVehicle.value = vehicle;
+            selectedBooking.value = booking;
+            isPaymentReceiptModalOpen.value = true;
+        }
     }
 };
 
@@ -75,16 +128,31 @@ const getSeatStatusLabel = (status: string) => {
 };
 
 // Check if seat is clickable
-const isSeatClickable = (status: string) => {
-    return status.toLowerCase() === 'available';
+const isSeatClickable = (seat: TourVehicleSeat) => {
+    const status = seat.status.toLowerCase();
+    if (status === 'available') {
+        return true;
+    }
+    if (status === 'reserved' && isReservedByCurrentAgent(seat)) {
+        return true;
+    }
+    return false;
 };
 
-// Handle modal close - clears selection for next new booking
-const handleModalClose = () => {
+// Handle booking modal close - clears selection for next new booking
+const handleBookingModalClose = () => {
     isBookingModalOpen.value = false;
     // Clear selection to ensure next booking starts fresh
     selectedSeat.value = null;
     selectedVehicle.value = null;
+};
+
+// Handle payment receipt modal close
+const handlePaymentReceiptModalClose = () => {
+    isPaymentReceiptModalOpen.value = false;
+    selectedSeat.value = null;
+    selectedVehicle.value = null;
+    selectedBooking.value = null;
 };
 
 // Handle booking confirmation
@@ -112,14 +180,17 @@ const handleBookingConfirm = (data: {
     });
 
     // Close modal after booking
-    handleModalClose();
+    handleBookingModalClose();
 };
 
 // Computed properties for modal props (to ensure proper type unwrapping)
-const modalOpen = computed(() => isBookingModalOpen.value);
+const bookingModalOpen = computed(() => isBookingModalOpen.value);
+const paymentReceiptModalOpen = computed(() => isPaymentReceiptModalOpen.value);
 const modalSeat = computed(() => selectedSeat.value);
 const modalVehicle = computed(() => selectedVehicle.value);
-const showModal = computed(() => !!selectedSeat.value && !!selectedVehicle.value);
+const modalBooking = computed(() => selectedBooking.value);
+const showBookingModal = computed(() => !!selectedSeat.value && !!selectedVehicle.value && isBookingModalOpen.value);
+const showPaymentReceiptModal = computed(() => !!selectedSeat.value && !!selectedVehicle.value && !!selectedBooking.value && isPaymentReceiptModalOpen.value);
 </script>
 
 <template>
@@ -183,10 +254,10 @@ const showModal = computed(() => !!selectedSeat.value && !!selectedVehicle.value
                         <div v-if="vehicle.tour_vehicle_seats && vehicle.tour_vehicle_seats.length > 0"
                             class="grid grid-cols-3 gap-4 rounded-lg border p-6 md:grid-cols-4 lg:grid-cols-6">
                             <div v-for="seat in vehicle.tour_vehicle_seats" :key="seat.id" :class="[
-                                'flex flex-col items-center justify-center rounded-lg border-2 p-4 transition-all cursor-pointer',
+                                'flex flex-col items-center justify-center rounded-lg border-2 p-4 transition-all',
                                 getSeatStatusColor(seat.status),
-                                isSeatClickable(seat.status)
-                                    ? 'hover:scale-105 hover:shadow-md'
+                                isSeatClickable(seat)
+                                    ? 'cursor-pointer hover:scale-105 hover:shadow-md'
                                     : 'cursor-not-allowed opacity-75',
                             ]" @click="handleSeatClick(seat, vehicle)">
                                 <span class="text-2xl font-bold">{{ seat.seatNumber }}</span>
@@ -224,10 +295,18 @@ const showModal = computed(() => !!selectedSeat.value && !!selectedVehicle.value
             </div>
 
             <!-- Booking Modal -->
-            <SeatBooking v-if="showModal && modalSeat && modalVehicle"
-                :key="`seat-${unref(modalSeat)?.id}-vehicle-${unref(modalVehicle)?.id}`" :open="unref(modalOpen)"
+            <SeatBooking v-if="showBookingModal && modalSeat && modalVehicle"
+                :key="`seat-${unref(modalSeat)?.id}-vehicle-${unref(modalVehicle)?.id}`" :open="unref(bookingModalOpen)"
                 :seat="unref(modalSeat)!" :vehicle="unref(modalVehicle)!" :tour="responseData.tour"
-                @update:open="handleModalClose" @confirm="handleBookingConfirm" />
+                @update:open="handleBookingModalClose" @confirm="handleBookingConfirm" />
+            
+            <!-- Payment Receipt Upload Modal -->
+            <UploadPaymentReceipt v-if="showPaymentReceiptModal && modalSeat && modalBooking"
+                :key="`payment-receipt-${unref(modalBooking)?.id}`"
+                :open="unref(paymentReceiptModalOpen)"
+                :seat="unref(modalSeat)!"
+                :booking="unref(modalBooking)!"
+                @update:open="handlePaymentReceiptModalClose" />
         </div>
     </AppLayout>
 </template>

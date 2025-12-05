@@ -95,4 +95,32 @@ class ToursController extends Controller
 
         return Inertia::location(route('agentTours'));
     }
+
+    public function uploadPaymentReceipt(Request $request)
+    {
+        dd($request->all());
+        $request->validate([
+            'bookingId' => 'required|numeric|exists:bookings,id',
+            'paymentReceipt' => 'required|file|mimes:jpeg,jpg,png,gif,pdf|max:5120', // 5MB max
+        ]);
+
+        $booking = Booking::with('client')->findOrFail($request->bookingId);
+
+        // Verify that the booking belongs to the current agent
+        if ($booking->client->userId !== auth()->user()->id) {
+            return back()->withErrors(['paymentReceipt' => 'You are not authorized to upload a receipt for this booking.']);
+        }
+
+        // Handle file upload
+        if ($request->hasFile('paymentReceipt')) {
+            $file = $request->file('paymentReceipt');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('payment-receipts', $fileName, 'public');
+            
+            $booking->paymentReceipt = $filePath;
+            $booking->save();
+        }
+
+        return back()->with('success', 'Payment receipt uploaded successfully.');
+    }
 }

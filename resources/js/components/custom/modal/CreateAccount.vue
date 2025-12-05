@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, unref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import InputError from '@/components/InputError.vue';
+import { useToast } from '@/components/ui/toast';
 import {
     Dialog,
     DialogContent,
@@ -21,6 +22,9 @@ const props = defineProps<{
 const emit = defineEmits<{
     'update:open': [value: boolean];
 }>();
+
+// Toast notifications
+const { success } = useToast();
 
 // Form fields
 const fullName = ref<string>('');
@@ -102,10 +106,14 @@ const handleSubmit = () => {
     };
 
     // Submit to backend
-    // TODO: Update this route when backend route is created
     router.post('/admin/agent/create', formData, {
         preserveScroll: true,
         onSuccess: () => {
+            // Show success toast
+            success(
+                'Invitation Sent',
+                'Agent account has been created and invitation email has been sent successfully.'
+            );
             // Close modal and reset form on success
             handleClose();
         },
@@ -179,7 +187,7 @@ watch(() => props.open, (isOpen) => {
                         @input="clearFullNameError"
                         :disabled="processing"
                     />
-                    <InputError :message="fullNameError" />
+                    <InputError :message="unref(fullNameError)" />
                 </div>
 
                 <!-- Email -->
@@ -196,7 +204,7 @@ watch(() => props.open, (isOpen) => {
                         @input="clearEmailError"
                         :disabled="processing"
                     />
-                    <InputError :message="emailError" />
+                    <InputError :message="unref(emailError)" />
                 </div>
 
                 <!-- Phone (Optional) -->
@@ -211,7 +219,7 @@ watch(() => props.open, (isOpen) => {
                         @input="clearPhoneError"
                         :disabled="processing"
                     />
-                    <InputError :message="phoneError" />
+                    <InputError :message="unref(phoneError)" />
                 </div>
 
                 <DialogFooter class="flex gap-3 mt-6">

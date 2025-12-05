@@ -12,6 +12,7 @@ class Booking extends Model
         "startDate",
         "endDate",
         "status",
+        "paymentReceipt",
     ];
 
     public function client()

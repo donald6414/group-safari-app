@@ -64,8 +64,34 @@ class AgentController extends Controller
 
         event(new Registered($user));
 
-        return Inertia::render('admin/Agents', [
-            'responseData' => $data
-        ]);
+        return redirect()->back();
+    }
+
+    public function suspend($id)
+    {
+        $user = User::findOrFail($id);
+        
+        if ($user->role !== 'agent') {
+            return back()->withErrors(['error' => 'User is not an agent']);
+        }
+        
+        $user->status = 'inactive';
+        $user->save();
+        
+        return redirect()->route('adminAgentsList')->with('success', 'Agent account suspended successfully');
+    }
+
+    public function activate($id)
+    {
+        $user = User::findOrFail($id);
+        
+        if ($user->role !== 'agent') {
+            return back()->withErrors(['error' => 'User is not an agent']);
+        }
+        
+        $user->status = 'active';
+        $user->save();
+        
+        return redirect()->route('adminAgentsList')->with('success', 'Agent account activated successfully');
     }
 }
