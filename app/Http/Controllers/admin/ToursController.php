@@ -11,6 +11,8 @@ use App\Models\Highlight;
 use App\Models\TourHighlight;
 use App\Models\TourVehicle;
 use App\Models\TourVehicleSeat;
+use App\Models\Booking;
+use Carbon\Carbon;
 
 class ToursController extends Controller
 {
@@ -58,13 +60,13 @@ class ToursController extends Controller
 
         // Generate tour title using ServiceController
         $serviceController = new ServiceController();
-        $title = $serviceController->generateTourTitle($validated['highlights'], $validated['startDate']);
+        $title = $serviceController->generateTourTitle($validated['highlights'], Carbon::parse($validated['startDate'])->addDays(1));
 
         $tour = Tour::create([
             'userId' => $user->id,
             'title' => $title,
-            'startDate' => $validated['startDate'],
-            'endDate' => $validated['endDate'],
+            'startDate' => Carbon::parse($validated['startDate'])->addDays(1),
+            'endDate' => Carbon::parse($validated['endDate'])->addDays(1),
             'language' => $validated['language'],
             'status' => 'active',
         ]);
@@ -137,5 +139,38 @@ class ToursController extends Controller
             'id' => $id,
             'responseData' => $responseData
         ]);
+    }
+
+    public function setReservationDueDate($id, Request $request){
+        $data = $request->validate([
+            'dueDate' => 'required|string'
+        ]);
+
+        $booking = Booking::with(['tourVehicleSeat.tourVehicle.tour'])->findOrFail($id);
+        
+        // Get the tour through relationships: Booking -> TourVehicleSeat -> TourVehicle -> Tour
+        $tour = $booking->tourVehicleSeat?->tourVehicle?->tour;
+        
+        if (!$tour) {
+            return redirect()->back()->withErrors([
+                'dueDate' => 'Unable to find the associated tour for this booking.'
+            ]);
+        }
+
+        $dueDate = Carbon::parse($data['dueDate'])->addDays(1);
+        $tourStartDate = Carbon::parse($tour->startDate);
+
+        // Validate that the due date is not greater than the tour start date
+        if ($dueDate->gt($tourStartDate)) {
+            return redirect()->back()->withErrors([
+                'dueDate' => 'The reservation due date cannot be greater than the tour start date (' . $tourStartDate->format('M d, Y') . ').'
+            ]);
+        }
+
+        $booking->reservationDueDate = $dueDate;
+        $booking->reservedAt = Carbon::now();
+        $booking->save();
+
+        return redirect()->back()->with('success', 'Reservation due date is set successfully!');
     }
 }
