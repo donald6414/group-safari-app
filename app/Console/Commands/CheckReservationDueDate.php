@@ -25,6 +25,8 @@ class CheckReservationDueDate extends Command
      */
     public function handle()
     {
-        //
+        $scheduleController = new ScheduleController();
+        $scheduleController->checkReservationDueDate();
+        $this->info('Reservation due date checked successfully');
     }
 }
