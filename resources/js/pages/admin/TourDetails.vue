@@ -193,6 +193,7 @@ const drawerSeat = computed(() => selectedSeat.value);
                 v-if="drawerSeat"
                 :open="unref(drawerOpen)"
                 :seat="unref(drawerSeat)"
+                :tour="props.responseData.tour"
                 @update:open="handleDrawerClose"
             />
             

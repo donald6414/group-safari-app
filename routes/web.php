@@ -9,6 +9,24 @@ use Laravel\Fortify\Features;
 //         'canRegister' => Features::enabled(Features::registration()),
 //     ]);
 // })->name('home');
+
+Route::get('/preview/due-date-email', function () {
+    // Get query parameter to determine which scenario to show (default: reminder)
+    $isDueDate = request()->query('reached', false);
+    
+    // Sample data for email preview
+    $sampleData = [
+        'packageTitle' => 'Serengeti Safari Adventure - 7 Days',
+        'seatNumber' => 5,
+        'clientName' => 'John Doe',
+        'agentName' => 'Jane Smith',
+        'isDueDate' => (bool) $isDueDate,
+        'daysLeft' => $isDueDate ? 0 : 3,
+    ];
+    
+    return view('emails.reservation-due-date-notification', ['data' => $sampleData]);
+})->name('preview.due-date-email');
+
 Route::get('/', function () {
 
     if (!auth()->user()) {
@@ -42,6 +60,7 @@ Route::post('admin/agent/suspend/{id}', [App\Http\Controllers\admin\AgentControl
 Route::post('admin/agent/suspend/{id}', [App\Http\Controllers\admin\AgentController::class, 'suspend'])->middleware(['auth', 'verified', 'admin'])->name('adminAgentSuspend');
 Route::post('admin/agent/activate/{id}', [App\Http\Controllers\admin\AgentController::class, 'activate'])->middleware(['auth', 'verified', 'admin'])->name('adminAgentActivate');
 Route::post('agent/confirm-booking', [App\Http\Controllers\agent\ToursController::class, 'confirmBooking'])->middleware(['auth', 'verified', 'admin'])->name('agentConfirmBooking');
+Route::post('admin/set-reservation/due-date/{bookingId}', [App\Http\Controllers\admin\ToursController::class, 'setReservationDueDate'])->middleware(['auth', 'verified', 'admin'])->name('adminSetReservationDueDate');
 
 // Agent
 Route::get('agent/dashboard', [App\Http\Controllers\agent\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'agent'])->name('agentDashboard');

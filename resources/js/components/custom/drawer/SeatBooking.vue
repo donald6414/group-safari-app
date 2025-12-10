@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { TourVehicleSeat, Booking, Client } from '@/types/tour';
+import { computed, ref, watch } from 'vue';
+import { TourVehicleSeat, Booking, Client, Tour } from '@/types/tour';
 import {
     Sheet,
     SheetContent,
@@ -22,13 +22,20 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { FileText, Image as ImageIcon, Eye, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-vue-next';
+import { FileText, Image as ImageIcon, Eye, CheckCircle2, ChevronDown, ChevronUp, Calendar as CalendarIcon } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
 import { useToast } from '@/components/ui/toast';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 
 const props = defineProps<{
     open: boolean;
     seat: TourVehicleSeat | null;
+    tour?: Tour | null;
 }>();
 
 const emit = defineEmits<{
@@ -40,6 +47,12 @@ const { success, error } = useToast();
 
 // Processing state for confirmation (track by booking ID)
 const confirmingBookings = ref<Record<number, boolean>>({});
+
+// Processing state for setting reservation due date (track by booking ID)
+const settingDueDate = ref<Record<number, boolean>>({});
+
+// Reservation due dates (track by booking ID)
+const reservationDueDates = ref<Record<number, Date | null>>({});
 
 // Open/closed state for accordion items (track by booking ID)
 const openBookings = ref<Record<number, boolean>>({});
@@ -61,8 +74,8 @@ const isSeatBooked = computed(() => {
 const canConfirmBooking = (booking: Booking) => {
     return (
         booking.status === 'active' &&
-        booking.paymentReceipt &&
-        booking.paymentReceipt.trim() !== '' &&
+        // booking.paymentReceipt &&
+        // booking.paymentReceipt.trim() !== '' &&
         props.seat?.status === 'reserved' &&
         !isSeatBooked.value
     );
@@ -150,6 +163,100 @@ const confirmBooking = (booking: Booking) => {
             },
             onFinish: () => {
                 confirmingBookings.value[booking.id] = false;
+            },
+        }
+    );
+};
+
+// Initialize reservation due dates from bookings
+const initializeReservationDueDates = () => {
+    bookings.value.forEach((booking) => {
+        if ((booking as any).reservationDueDate) {
+            reservationDueDates.value[booking.id] = new Date((booking as any).reservationDueDate);
+        } else {
+            // Initialize with null if not set
+            if (!(booking.id in reservationDueDates.value)) {
+                reservationDueDates.value[booking.id] = null;
+            }
+        }
+    });
+};
+
+// Watch for changes in bookings and initialize reservation due dates
+watch(bookings, () => {
+    initializeReservationDueDates();
+}, { immediate: true, deep: true });
+
+// Handle reservation due date change
+const handleDueDateChange = (bookingId: number, date: Date | null) => {
+    reservationDueDates.value[bookingId] = date;
+};
+
+// Format date for display in input
+const formatDateForInput = (date: Date | null) => {
+    if (!date) return 'Select reservation due date';
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+};
+
+// Get maximum date for reservation due date (tour end date)
+const getMaxReservationDate = (booking: Booking) => {
+    // Use tour end date if available, otherwise fallback to booking end date
+    if (props.tour?.endDate) {
+        return new Date(props.tour.endDate).toISOString().split('T')[0];
+    }
+    // Fallback to booking end date if tour is not provided
+    if (booking.endDate) {
+        return new Date(booking.endDate).toISOString().split('T')[0];
+    }
+    return undefined;
+};
+
+// Handle setting reservation due date
+const setReservationDueDate = (booking: Booking) => {
+    if (!booking || !reservationDueDates.value[booking.id]) {
+        error('Invalid Date', 'Please select a valid reservation due date.');
+        return;
+    }
+
+    const dueDate = reservationDueDates.value[booking.id];
+    const maxDate = getMaxReservationDate(booking);
+    
+    // Validate that the selected date is not greater than the tour end date
+    if (maxDate && dueDate) {
+        const selectedDateStr = dueDate.toISOString().split('T')[0];
+        if (selectedDateStr > maxDate) {
+            error('Invalid Date', `Reservation due date cannot be greater than the tour end date (${formatDate(props.tour?.endDate || booking.endDate)}).`);
+            return;
+        }
+    }
+
+    settingDueDate.value[booking.id] = true;
+
+    const formattedDate = dueDate?.toISOString().split('T')[0] || '';
+
+    router.post(
+        `/admin/set-reservation/due-date/${booking.id}`,
+        {
+            dueDate: formattedDate,
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                success(
+                    'Reservation Due Date Set',
+                    'The reservation due date has been successfully updated.'
+                );
+            },
+            onError: (pageErrors) => {
+                const errorMessage = pageErrors?.message || pageErrors?.dueDate || 'Failed to set reservation due date. Please try again.';
+                error('Update Failed', errorMessage);
+            },
+            onFinish: () => {
+                settingDueDate.value[booking.id] = false;
             },
         }
     );
@@ -349,6 +456,51 @@ const handleClose = () => {
                                             <p class="text-xs text-muted-foreground truncate">
                                                 {{ booking.paymentReceipt }}
                                             </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Reservation Due Date Section -->
+                                <div class="rounded-lg border bg-muted p-4 space-y-3">
+                                    <h4 class="text-sm font-semibold">Reservation Due Date</h4>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center gap-2">
+                                            <Popover>
+                                                <PopoverTrigger as-child>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        class="flex-1 justify-start text-left font-normal"
+                                                        :disabled="settingDueDate[booking.id]"
+                                                    >
+                                                        <CalendarIcon class="mr-2 h-4 w-4" />
+                                                        <span>{{ formatDateForInput(reservationDueDates[booking.id] || null) }}</span>
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent class="w-auto p-0" align="start">
+                                                    <Calendar
+                                                        :model-value="reservationDueDates[booking.id] || null"
+                                                        @update:model-value="(date) => handleDueDateChange(booking.id, date)"
+                                                        :min="booking.startDate ? new Date(booking.startDate).toISOString().split('T')[0] : undefined"
+                                                        :max="getMaxReservationDate(booking)"
+                                                    />
+                                                </PopoverContent>
+                                            </Popover>
+                                            <Button
+                                                @click="setReservationDueDate(booking)"
+                                                :disabled="!reservationDueDates[booking.id] || settingDueDate[booking.id]"
+                                                size="default"
+                                                class="shrink-0"
+                                            >
+                                                <span v-if="settingDueDate[booking.id]">Setting...</span>
+                                                <span v-else>Set Date</span>
+                                            </Button>
+                                        </div>
+                                        <div v-if="props.tour?.endDate || booking.endDate" class="text-xs text-muted-foreground">
+                                            Maximum date: {{ formatDate(props.tour?.endDate || booking.endDate) }}
+                                        </div>
+                                        <div v-if="(booking as any).reservationDueDate" class="text-xs text-muted-foreground">
+                                            Current due date: {{ formatDate((booking as any).reservationDueDate) }}
                                         </div>
                                     </div>
                                 </div>
