@@ -8,7 +8,11 @@ import StartCard from '@/components/custom/StartCard.vue';
 import { type Stat } from '@/types/stat';
 import { type Tour, TourVehicleSeat, TourVehicle } from '@/types/tour';
 import SeatBookingDrawer from '@/components/custom/drawer/SeatBooking.vue';
+import AddVehicleConfirmation from '@/components/custom/modal/AddVehicleConfirmation.vue';
+import DeleteVehicleConfirmation from '@/components/custom/modal/DeleteVehicleConfirmation.vue';
 import { Toaster } from '@/components/ui/toast';
+import { Button } from '@/components/ui/button';
+import { Plus, Trash2 } from 'lucide-vue-next';
 
 const props = defineProps<{
     id: number | string;
@@ -32,6 +36,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 // Drawer state
 const isDrawerOpen = ref(false);
 const selectedSeat = ref<TourVehicleSeat | null>(null);
+
+// Add vehicle modal state
+const isAddVehicleModalOpen = ref(false);
+
+// Delete vehicle modal state
+const isDeleteVehicleModalOpen = ref(false);
+const selectedVehicleToDelete = ref<TourVehicle | null>(null);
 
 // Format date for display
 const formatDate = (dateString: string | null) => {
@@ -80,6 +91,54 @@ const handleDrawerClose = () => {
 // Computed properties for drawer props
 const drawerOpen = computed(() => isDrawerOpen.value);
 const drawerSeat = computed(() => selectedSeat.value);
+
+// Computed property for vehicle name
+const vehicleToDeleteName = computed(() => {
+    if (!selectedVehicleToDelete.value) return '';
+    const vehicle = selectedVehicleToDelete.value;
+    if (vehicle.vehicleType) return vehicle.vehicleType;
+    const index = props.responseData.tour.tour_vehicles?.findIndex(v => v.id === vehicle.id);
+    return index !== undefined && index >= 0 ? `Vehicle ${index + 1}` : `Vehicle #${vehicle.id}`;
+});
+
+// Handle add vehicle button click
+const handleAddVehicleClick = () => {
+    isAddVehicleModalOpen.value = true;
+};
+
+// Handle add vehicle modal close
+const handleAddVehicleModalClose = () => {
+    isAddVehicleModalOpen.value = false;
+};
+
+// Check if vehicle has reserved or booked seats
+const hasReservedOrBookedSeats = (vehicle: TourVehicle): boolean => {
+    if (!vehicle.tour_vehicle_seats || vehicle.tour_vehicle_seats.length === 0) {
+        return false;
+    }
+    return vehicle.tour_vehicle_seats.some(seat => 
+        seat.status === 'reserved' || seat.status === 'booked'
+    );
+};
+
+// Check if vehicle can be deleted (not first vehicle and no reserved/booked seats)
+const canDeleteVehicle = (vehicle: TourVehicle, vehicleIndex: number): boolean => {
+    return vehicleIndex > 0 && !hasReservedOrBookedSeats(vehicle);
+};
+
+// Handle delete vehicle button click
+const handleDeleteVehicleClick = (vehicle: TourVehicle) => {
+    selectedVehicleToDelete.value = vehicle;
+    isDeleteVehicleModalOpen.value = true;
+};
+
+// Handle delete vehicle modal close
+const handleDeleteVehicleModalClose = () => {
+    isDeleteVehicleModalOpen.value = false;
+    setTimeout(() => {
+        selectedVehicleToDelete.value = null;
+    }, 300);
+};
 </script>
 
 <template>
@@ -106,19 +165,25 @@ const drawerSeat = computed(() => selectedSeat.value);
             
             <!-- Tour Information Card -->
             <div class="rounded-xl border bg-card p-6 shadow-sm">
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    <div>
-                        <p class="text-sm font-medium text-muted-foreground">START DATE</p>
-                        <p class="mt-1 text-lg font-semibold">{{ formatDate(props.responseData.tour.startDate) }}</p>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-3 flex-1">
+                        <div>
+                            <p class="text-sm font-medium text-muted-foreground">START DATE</p>
+                            <p class="mt-1 text-lg font-semibold">{{ formatDate(props.responseData.tour.startDate) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-muted-foreground">END DATE</p>
+                            <p class="mt-1 text-lg font-semibold">{{ formatDate(props.responseData.tour.endDate) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-muted-foreground">LANGUAGE</p>
+                            <p class="mt-1 text-lg font-semibold">{{ props.responseData.tour.language || '-' }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-muted-foreground">END DATE</p>
-                        <p class="mt-1 text-lg font-semibold">{{ formatDate(props.responseData.tour.endDate) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-muted-foreground">LANGUAGE</p>
-                        <p class="mt-1 text-lg font-semibold">{{ props.responseData.tour.language || '-' }}</p>
-                    </div>
+                    <Button @click="handleAddVehicleClick" class="ml-4 shrink-0">
+                        <Plus class="mr-2 h-4 w-4" />
+                        Add Vehicle
+                    </Button>
                 </div>
             </div>
             
@@ -126,13 +191,25 @@ const drawerSeat = computed(() => selectedSeat.value);
             <div v-if="props.responseData.tour.tour_vehicles && props.responseData.tour.tour_vehicles.length > 0">
                 <div v-for="(vehicle, vehicleIndex) in props.responseData.tour.tour_vehicles" :key="vehicle.id" class="mb-8">
                     <!-- Vehicle Header -->
-                    <div class="mb-4">
-                        <h2 class="text-2xl font-bold">
-                            {{ vehicle.vehicleType || `Vehicle ${vehicleIndex + 1}` }}
-                        </h2>
-                        <p class="text-sm text-muted-foreground">
-                            {{ vehicle.numberOfSeat || 0 }} seats available
-                        </p>
+                    <div class="mb-4 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold">
+                                {{ vehicle.vehicleType || `Vehicle ${vehicleIndex + 1}` }}
+                            </h2>
+                            <p class="text-sm text-muted-foreground">
+                                {{ vehicle.numberOfSeat || 0 }} seats available
+                            </p>
+                        </div>
+                        <Button 
+                            v-if="canDeleteVehicle(vehicle, vehicleIndex)"
+                            variant="destructive"
+                            size="sm"
+                            @click="handleDeleteVehicleClick(vehicle)"
+                            class="shrink-0"
+                        >
+                            <Trash2 class="mr-2 h-4 w-4" />
+                            Delete Vehicle
+                        </Button>
                     </div>
 
                     <!-- Seats Grid -->
@@ -195,6 +272,24 @@ const drawerSeat = computed(() => selectedSeat.value);
                 :seat="unref(drawerSeat)"
                 :tour="props.responseData.tour"
                 @update:open="handleDrawerClose"
+            />
+            
+            <!-- Add Vehicle Confirmation Modal -->
+            <AddVehicleConfirmation
+                :open="isAddVehicleModalOpen"
+                :tour-id="tourId"
+                :tour-title="props.responseData.tour.title"
+                @update:open="handleAddVehicleModalClose"
+            />
+            
+            <!-- Delete Vehicle Confirmation Modal -->
+            <DeleteVehicleConfirmation
+                v-if="selectedVehicleToDelete"
+                :open="isDeleteVehicleModalOpen"
+                :vehicle-id="selectedVehicleToDelete.id"
+                :vehicle-name="vehicleToDeleteName"
+                :tour-title="props.responseData.tour.title"
+                @update:open="handleDeleteVehicleModalClose"
             />
             
             <!-- Toast Notifications -->
