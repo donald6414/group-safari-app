@@ -173,4 +173,41 @@ class ToursController extends Controller
 
         return redirect()->back()->with('success', 'Reservation due date is set successfully!');
     }
+
+    public function addVehicle(Request $request, $id){
+        $tour = Tour::findOrFail($id);
+
+        $tourVehicle = TourVehicle::create([
+            'tourId' => $tour->id
+        ]);
+
+        for ($i=0; $i < 6; $i++) { 
+            TourVehicleSeat::create([
+                'tourVehicleId' => $tourVehicle->id,
+                'seatNumber' => $i
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Vehicle Added successfully!');
+    }
+
+    public function deleteVehicle($id){
+        $vehicle = TourVehicle::with(['tourVehicleSeats'])->findOrFail($id);
+        
+        // Check if vehicle has any reserved or booked seats
+        $hasReservedOrBookedSeats = $vehicle->tourVehicleSeats->contains(function($seat) {
+            return $seat->status === 'reserved' || $seat->status === 'booked';
+        });
+        
+        if ($hasReservedOrBookedSeats) {
+            return redirect()->back()->withErrors([
+                'vehicle' => 'Cannot delete vehicle. It has reserved or booked seats.'
+            ]);
+        }
+        
+        // Delete the vehicle (seats will be deleted automatically due to cascade)
+        $vehicle->delete();
+        
+        return redirect()->back()->with('success', 'Vehicle deleted successfully!');
+    }
 }

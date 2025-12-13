@@ -61,6 +61,8 @@ Route::post('admin/agent/suspend/{id}', [App\Http\Controllers\admin\AgentControl
 Route::post('admin/agent/activate/{id}', [App\Http\Controllers\admin\AgentController::class, 'activate'])->middleware(['auth', 'verified', 'admin'])->name('adminAgentActivate');
 Route::post('agent/confirm-booking', [App\Http\Controllers\agent\ToursController::class, 'confirmBooking'])->middleware(['auth', 'verified', 'admin'])->name('agentConfirmBooking');
 Route::post('admin/set-reservation/due-date/{bookingId}', [App\Http\Controllers\admin\ToursController::class, 'setReservationDueDate'])->middleware(['auth', 'verified', 'admin'])->name('adminSetReservationDueDate');
+Route::post('admin/add/vehicle/{tourId}', [App\Http\Controllers\admin\ToursController::class, 'addVehicle'])->middleware(['auth', 'verified', 'admin'])->name('addVehicle');
+Route::delete('admin/delete/vehicle/{vehicleId}', [App\Http\Controllers\admin\ToursController::class, 'deleteVehicle'])->middleware(['auth', 'verified', 'admin'])->name('deleteVehicle');
 
 // Agent
 Route::get('agent/dashboard', [App\Http\Controllers\agent\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'agent'])->name('agentDashboard');
