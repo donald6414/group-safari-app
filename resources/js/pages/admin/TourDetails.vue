@@ -79,6 +79,23 @@ const getSeatStatusLabel = (status: string) => {
     return status.toUpperCase();
 };
 
+// Get payment receipt number for a booked seat
+const getPaymentReceiptNumber = (seat: TourVehicleSeat): string | null => {
+    if (!seat.bookings || seat.bookings.length === 0) {
+        return null;
+    }
+    
+    // Find booking with confirmed_payment status and paymentReceiptNumber
+    const confirmedBooking = seat.bookings.find(
+        (booking) => 
+            booking.status === 'confirmed_payment' && 
+            booking.paymentReceiptNumber && 
+            booking.paymentReceiptNumber.trim() !== ''
+    );
+    
+    return confirmedBooking?.paymentReceiptNumber || null;
+};
+
 // Handle drawer close
 const handleDrawerClose = () => {
     isDrawerOpen.value = false;
@@ -234,6 +251,13 @@ const handleDeleteVehicleModalClose = () => {
                                 </span>
                                 <span v-if="seat.bookings && seat.bookings.length > 0" class="mt-1 text-xs text-muted-foreground">
                                     {{ seat.bookings.length }} booking{{ seat.bookings.length > 1 ? 's' : '' }}
+                                </span>
+                                <span 
+                                    v-if="seat.status === 'booked' && getPaymentReceiptNumber(seat)" 
+                                    class="mt-1 text-xs font-semibold text-foreground bg-background/50 px-2 py-0.5 rounded"
+                                    title="Payment Receipt Number"
+                                >
+                                    Receipt: {{ getPaymentReceiptNumber(seat) }}
                                 </span>
                             </div>
                         </div>

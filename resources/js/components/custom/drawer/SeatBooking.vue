@@ -31,6 +31,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import ReceiptNumber from '@/components/custom/modal/ReceiptNumber.vue';
 
 const props = defineProps<{
     open: boolean;
@@ -102,6 +103,10 @@ const isBookingOpen = (bookingId: number) => {
 const isReceiptViewerOpen = ref(false);
 const viewingReceipt = ref<string | null>(null);
 
+// Receipt number modal state
+const isReceiptNumberModalOpen = ref(false);
+const currentBookingForConfirmation = ref<Booking | null>(null);
+
 // Check if receipt is a PDF
 const isReceiptPdf = (receiptPath: string | null | undefined) => {
     if (!receiptPath) return false;
@@ -131,41 +136,29 @@ const closeReceiptViewer = () => {
     viewingReceipt.value = null;
 };
 
-// Handle booking confirmation
+// Handle booking confirmation - opens receipt number modal
 const confirmBooking = (booking: Booking) => {
     if (!booking || !props.seat) {
         return;
     }
 
-    confirmingBookings.value[booking.id] = true;
+    // Store the booking and open the modal
+    currentBookingForConfirmation.value = booking;
+    isReceiptNumberModalOpen.value = true;
+};
 
-    router.post(
-        '/agent/confirm-booking',
-        {
-            bookingId: booking.id,
-            seatId: props.seat.id,
-        },
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                success(
-                    'Booking Confirmed',
-                    'The booking has been confirmed and the seat status has been updated to booked.'
-                );
-                // Close the drawer after successful confirmation
-                setTimeout(() => {
-                    handleClose();
-                }, 1500);
-            },
-            onError: (pageErrors) => {
-                const errorMessage = pageErrors?.message || 'Failed to confirm booking. Please try again.';
-                error('Confirmation Failed', errorMessage);
-            },
-            onFinish: () => {
-                confirmingBookings.value[booking.id] = false;
-            },
-        }
-    );
+// Handle receipt number modal success
+const handleReceiptNumberSuccess = () => {
+    // Close the drawer after successful confirmation
+    setTimeout(() => {
+        handleClose();
+    }, 1500);
+};
+
+// Handle receipt number modal close
+const handleReceiptNumberModalClose = () => {
+    isReceiptNumberModalOpen.value = false;
+    currentBookingForConfirmation.value = null;
 };
 
 // Initialize reservation due dates from bookings
@@ -654,5 +647,15 @@ const handleClose = () => {
             </div>
         </DialogContent>
     </Dialog>
+
+    <!-- Receipt Number Modal -->
+    <ReceiptNumber
+        :open="isReceiptNumberModalOpen"
+        :booking-id="currentBookingForConfirmation?.id"
+        :seat-id="seat?.id"
+        :seat-number="seat?.seatNumber"
+        @update:open="handleReceiptNumberModalClose"
+        @success="handleReceiptNumberSuccess"
+    />
 </template>
 

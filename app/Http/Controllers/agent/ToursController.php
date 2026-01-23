@@ -180,6 +180,8 @@ class ToursController extends Controller
         $request->validate([
             'bookingId' => 'required|numeric|exists:bookings,id',
             'seatId' => 'required|numeric|exists:tour_vehicle_seats,id',
+            'paymentReceiptNumber' => 'required|string',
+            // 'paymentReceipt' => 'required|file|mimes:jpeg,jpg,png,gif,pdf|max:5120', // 5MB max
         ]);
 
         $booking = Booking::with('client')->findOrFail($request->bookingId);
@@ -191,9 +193,9 @@ class ToursController extends Controller
         }
 
         // Verify that booking has a payment receipt
-        if (!$booking->paymentReceipt || trim($booking->paymentReceipt) === '') {
-            return back()->withErrors(['message' => 'Payment receipt is required before confirming booking.']);
-        }
+        // if (!$booking->paymentReceipt || trim($booking->paymentReceipt) === '') {
+        //     return back()->withErrors(['message' => 'Payment receipt is required before confirming booking.']);
+        // }
 
         // Verify that booking status is active
         if ($booking->status !== 'active') {
@@ -207,6 +209,7 @@ class ToursController extends Controller
 
         // Update booking status to confirmed_payment
         $booking->status = 'confirmed_payment';
+        $booking->paymentReceiptNumber = $request->paymentReceiptNumber;
         $booking->save();
 
         // Update seat status to booked
