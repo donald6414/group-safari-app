@@ -25,6 +25,7 @@ export interface Booking {
     updated_at: string;
     reservationDueDate?: string | null;
     reservedAt?: string | null;
+    paymentReceiptNumber?: string | null;
     client?: Client;
 }
 
