@@ -9,3 +9,12 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('app:check-reservation-due-date')->daily();
+
+// Run queue worker every minute to process queued jobs
+Schedule::command('queue:work --once')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->onFailure(function () {
+        // Log failure if needed
+        \Log::error('Queue worker failed to process jobs');
+    });
